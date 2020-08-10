@@ -1,0 +1,32 @@
+From 0a1910b59f1d6465aac850ad1770d6320e3e2c0a Mon Sep 17 00:00:00 2001
+From: Catalin Toda <catalinii@yahoo.com>
+Date: Thu, 23 Apr 2020 21:22:37 -0700
+Subject: [PATCH] Do not close UDP sockets that return 0
+
+---
+ src/socketworks.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/src/socketworks.c b/src/socketworks.c
+index 1068c7b..9175cde 100644
+--- a/src/socketworks.c
++++ b/src/socketworks.c
+@@ -502,7 +502,8 @@ int sockets_recv(int socket, void *buf, int len, sockets *ss, int *rv)
+ 	int slen = sizeof(ss->sa);
+ 	*rv = recvfrom(socket, buf, len, 0, &ss->sa.sa,
+ 				   (socklen_t *)&slen);
+-	return (*rv > 0);
++	// 0 is totally acceptable for UDP
++	return (*rv >= 0);
+ }
+ 
+ int init_sock = 0;
+@@ -908,7 +909,7 @@ void *select_and_execute(void *arg)
+ 						else
+ 							err_str = strerror(err);
+ 
+-						if (ss->type == TYPE_RTCP || ss->sock == SOCK_TIMEOUT)
++						if (ss->sock == SOCK_TIMEOUT)
+ 						{
+ 							LOG(
+ 								"ignoring error on sock_id %d handle %d type %d error %d : %s",
